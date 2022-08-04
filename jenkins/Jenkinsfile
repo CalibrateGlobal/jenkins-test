@@ -17,7 +17,6 @@ pipeline {
                 sh "cp jenkins-test.qext build/"
                 echo 'Zip build folder'
                 zip zipFile: 'jenkins-test.zip', archive: false, dir: 'build'
-                archiveArtifacts artifacts: 'jenkins-test.zip', fingerprint: true
             }
         }
     }
