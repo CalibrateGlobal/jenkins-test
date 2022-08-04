@@ -7,15 +7,20 @@ pipeline {
         CI = 'false'
     }
     stages {
-        stage("Build") {
+        stage ("Build") {
             steps {
                 echo 'Installing npm packages'
                 sh "npm install"
-                echo 'Build static site'
+
+                /* echo 'Build static site'
                 sh "npm run build"
+
                 echo 'Copy .qext file'
                 sh "cp jenkins-test.qext build/"
+
                 echo 'Zip build folder'
+                zip zipFile: 'jenkins-test.zip', archive: false, dir: 'build'
+                archiveArtifacts artifacts: 'jenkins-test.zip', fingerprint: true */
             }
         }
     }
