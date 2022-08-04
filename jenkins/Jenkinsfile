@@ -1,0 +1,26 @@
+pipeline {
+    agent any
+    tools {
+        nodejs '18.7.0'
+    }
+    environment {
+        CI = 'false'
+    }
+    stages {
+        stage("Build") {
+            steps {
+                echo 'Installing npm packages'
+                sh "npm install"
+
+                echo 'Build static site'
+                sh "npm run build"
+
+                echo 'Copy .qext file'
+                sh "cp jenkins-test.qext build/"
+
+                echo 'Zip build folder'
+                sh "(cd build && zip -r ../jenkins-test.zip .)"
+            }
+        }
+    }
+}
