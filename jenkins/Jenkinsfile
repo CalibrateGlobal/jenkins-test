@@ -5,6 +5,8 @@ pipeline {
     }
     environment {
         CI = 'false'
+        QRS_JWT     = credentials('QRS_JWT')
+        QRS_XRF = credentials('QRS_XRF')
     }
     stages {
         stage ("Build") {
@@ -21,6 +23,15 @@ pipeline {
                 echo 'Zip build folder'
                 zip zipFile: 'jenkins-test.zip', archive: false, dir: 'build'
                 archiveArtifacts artifacts: 'jenkins-test.zip', fingerprint: true
+            }
+        }
+        stage ("Deploy") {
+            steps {
+                echo 'Delete existing extension'
+                sh 'curl -X DELETE -H "X-Qlik-xrfkey: $QRS_XRF" -H "Authorization: Bearer $QRS_JWT" "https://cc-edapps.calibrateconsulting.com/jwt/qrs/extension/name/nebula-lib?xrfkey=$QRS_XRF"'
+
+                echo 'Upload New Extension'
+                sh 'curl -X POST -H "Content-Type: application/json" -H "X-Qlik-xrfkey: $QRS_XRF" -H "Authorization: Bearer $QRS_JWT" --data-binary "@jenkins-test.zip" "https://cc-edapps.calibrateconsulting.com/jwt/qrs/extension/upload?xrfkey=$QRS_XRF"'
             }
         }
     }
