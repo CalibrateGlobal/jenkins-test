@@ -28,7 +28,7 @@ pipeline {
         stage ("Deploy") {
             steps {
                 echo 'Delete existing extension'
-                sh 'curl -X DELETE -H "X-Qlik-xrfkey: $QRS_XRF" -H "Authorization: Bearer $QRS_JWT" "https://cc-edapps.calibrateconsulting.com/jwt/qrs/extension/name/nebula-lib?xrfkey=$QRS_XRF"'
+                sh 'curl -X DELETE -H "X-Qlik-xrfkey: $QRS_XRF" -H "Authorization: Bearer $QRS_JWT" "https://cc-edapps.calibrateconsulting.com/jwt/qrs/extension/name/jenkins-test?xrfkey=$QRS_XRF"'
 
                 echo 'Upload New Extension'
                 sh 'curl -X POST -H "Content-Type: application/json" -H "X-Qlik-xrfkey: $QRS_XRF" -H "Authorization: Bearer $QRS_JWT" --data-binary "@jenkins-test.zip" "https://cc-edapps.calibrateconsulting.com/jwt/qrs/extension/upload?xrfkey=$QRS_XRF"'
