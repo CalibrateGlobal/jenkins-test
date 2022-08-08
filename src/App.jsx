@@ -24,7 +24,7 @@ const App = () => {
   return (
     <StyledScreenContainer>
       <StyledJenkinsIcon />
-      <StyledTitleText>Jenkins Test</StyledTitleText>
+      <StyledTitleText>Jenkins Test 123</StyledTitleText>
     </StyledScreenContainer>
   );
 };
