@@ -25,5 +25,8 @@ sh "npm run test"
                 sh "npm run lint"
             }
         }
+        post {
+        cleanup { cleanWs() }
+    }
     }
 } 
