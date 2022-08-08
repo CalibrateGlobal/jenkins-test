@@ -26,6 +26,9 @@ pipeline {
             }
         }
         stage ("Deploy") {
+            when {
+                branch 'deploy'
+            }
             steps {
                 echo 'Delete existing extension'
                 sh 'curl -X DELETE -H "X-Qlik-xrfkey: $QRS_XRF" -H "Authorization: Bearer $QRS_JWT" "https://cc-edapps.calibrateconsulting.com/jwt/qrs/extension/name/jenkins-test?xrfkey=$QRS_XRF"'
