@@ -1,0 +1,44 @@
+pipeline {
+    agent any
+    tools {
+        nodejs '18.7.0'
+    }
+    environment {
+        CI = 'false'
+        QRS_JWT = credentials('QRS_JWT')
+        QRS_XRF = credentials('QRS_XRF')
+    }
+    stages {
+        stage ("Build") {
+            steps {
+                echo 'Installing npm packages'
+                sh "npm install"
+
+                echo 'Build static site'
+                sh "npm run build"
+
+                echo 'Copy .qext file'
+                sh "cp jenkins-test.qext build/"
+
+                echo 'Zip build folder'
+                zip zipFile: 'jenkins-test.zip', archive: false, dir: 'build'
+                archiveArtifacts artifacts: 'jenkins-test.zip', fingerprint: true
+            }
+        }
+        stage ("Deploy") {
+            when {
+                branch 'deploy'
+            }
+            steps {
+                echo 'Delete existing extension'
+                sh 'curl -X DELETE -H "X-Qlik-xrfkey: $QRS_XRF" -H "Authorization: Bearer $QRS_JWT" "https://cc-edapps.calibrateconsulting.com/jwt/qrs/extension/name/jenkins-test?xrfkey=$QRS_XRF"'
+
+                echo 'Upload New Extension'
+                sh 'curl -X POST -H "Content-Type: application/json" -H "X-Qlik-xrfkey: $QRS_XRF" -H "Authorization: Bearer $QRS_JWT" --data-binary "@jenkins-test.zip" "https://cc-edapps.calibrateconsulting.com/jwt/qrs/extension/upload?xrfkey=$QRS_XRF"'
+            }
+        }
+    }
+    post {
+        cleanup { cleanWs() }
+    }
+}
