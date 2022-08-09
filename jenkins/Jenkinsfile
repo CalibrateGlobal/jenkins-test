@@ -1,12 +1,12 @@
 pipeline {
-    agent any
+    agent any // Will default to Jenkins controller's built-in "node"
     tools {
-        nodejs '18.7.0'
+        nodejs '18.7.0' // Specifies the particular Node.js installation to utilise in the agent environment from the NodeJS Jenkins plugin. '18.7.0' refers to the name given to the node installation in the plugin (must match the name of the desired installation)
     }
     environment {
-        CI = 'false'
-        QRS_JWT = credentials('QRS_JWT')
-        QRS_XRF = credentials('QRS_XRF')
+        CI = 'false' // CI environmental variable set to false in order to avoid potential linting errors...
+        QRS_JWT = credentials('QRS_JWT') // Creates a QRS_JWT environmental variable based on the corresponding credential created in Jenkins
+        QRS_XRF = credentials('QRS_XRF') // Creates a QRS_XRF environmental variable based on the corresponding credential created in Jenkins
     }
     stages {
         stage ("Build") {
@@ -18,27 +18,29 @@ pipeline {
                 sh "npm run build"
 
                 echo 'Copy .qext file'
-                sh "cp jenkins-test.qext build/"
+                sh "cp jenkins-test.qext build/"  // Copies the .qext file located at the root of the directory into the newly created build folder
 
                 echo 'Zip build folder'
-                zip zipFile: 'jenkins-test.zip', archive: false, dir: 'build'
-                archiveArtifacts artifacts: 'jenkins-test.zip', fingerprint: true
+                zip zipFile: 'jenkins-test.zip', archive: false, dir: 'build' // Zips the contents of the build directory (zip file will be located at root of workspace)
+                archiveArtifacts artifacts: 'jenkins-test.zip', fingerprint: true // Creates an artifact of the zip file as a persistent record (accessible within the build's status page in Jenkins )
             }
         }
         stage ("Deploy") {
             when {
-                branch 'deploy'
+                branch 'deploy' // Makes the "Deploy" stage of the pipeline conditional on the event trigering the build being a push to the "deploy" branch
             }
             steps {
-                echo 'Delete existing extension'
+                echo 'Delete existing extension' // Request to the QRS API (via 'qrs' virtual proxy) that will delete any existing extension on the Qlik Sense server named "jenkins-test"
                 sh 'curl -X DELETE -H "X-Qlik-xrfkey: $QRS_XRF" -H "Authorization: Bearer $QRS_JWT" "https://cc-edapps.calibrateconsulting.com/jwt/qrs/extension/name/jenkins-test?xrfkey=$QRS_XRF"'
 
-                echo 'Upload New Extension'
+                echo 'Upload New Extension'  // Request to the QRS API (via 'qrs' virtual proxy) that will create a new extension based on the contents of the uploaded zip file
                 sh 'curl -X POST -H "Content-Type: application/json" -H "X-Qlik-xrfkey: $QRS_XRF" -H "Authorization: Bearer $QRS_JWT" --data-binary "@jenkins-test.zip" "https://cc-edapps.calibrateconsulting.com/jwt/qrs/extension/upload?xrfkey=$QRS_XRF"'
-            }
+            } // Note: The QRS_XRF and QRS_JWT environmental variables created above are referenced in the shell command/script by appending a '$' to the front of the variable (e.g. $QRS_XRF)
         }
     }
-    post {
-        cleanup { cleanWs() }
+    post { // Defines one or more additional steps that are run upon the pipeline's completion
+        cleanup { // The "cleanup" condition runs after every other post condition has been evaluated, regardless of the pipeline or stage’s status.
+            cleanWs()  // Invokes the "Workspace Cleanup" plugin to clean up the build workspace
+            }
     }
 }
